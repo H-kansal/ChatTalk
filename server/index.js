@@ -14,12 +14,24 @@ dotenv.config();
 
 const app = express();
 
-app.use(cors(
-    {
-        origin: 'http://localhost:5173', // your frontend URL
-        credentials: true
+const allowedOrigins = [
+  "http://localhost:5173",
+  "http://localhost:3000",
+  process.env.CLIENT_ORIGIN,
+].filter(Boolean);
+
+const corsOptions = {
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin) || !process.env.CLIENT_ORIGIN) {
+      callback(null, true);
+    } else {
+      callback(null, true);
     }
-))
+  },
+  credentials: true,
+};
+
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -41,10 +53,7 @@ ConnectDb().then(() => {
   });
 
   const io = new Server(server, {
-    cors: {
-      origin: "http://localhost:5173",
-      credentials: true,
-    },
+    cors: corsOptions,
   });
 
   io.use(VerifySocketToken);
